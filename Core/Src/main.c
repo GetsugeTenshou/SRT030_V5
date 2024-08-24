@@ -62,7 +62,12 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+uint8_t expectedData[] = {0x01, 0x02, 0x03, 0x04, 0x05 ,0x06 ,0x07 ,0x08 ,0x09 ,0x0A ,0x0B ,0x0C ,0x0D ,0x0E,0x0F};
+  uint8_t receivedData;
+  uint8_t fine = 0xFF;
+  uint8_t error = 0xEE;
+  uint8_t match = 0;
+  uint8_t mode = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,7 +76,26 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+  if(huart==&huart1)
+  {
+    for (int i = 0; i < sizeof(expectedData); i++)
+         {
+           if (receivedData == expectedData[i])
+           {
+             match = 1;
+             break;
+           }
+         }
 
+  if(match==1){
+      HAL_UART_Transmit_IT(&huart1, &fine, 1);
+    }
+    else{
+      HAL_UART_Transmit_IT(&huart1, &error, 1);
+    }
+  }
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -110,58 +134,40 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t expectedBits[] = {0x01, 0x02, 0x03, 0x04, 0x05 ,0x06 ,0x07 ,0x08 ,0x09 ,0x0A ,0x0B ,0x0C ,0x0D ,0x0E ,0x0F};
-  uint8_t receivedData;
-  uint8_t ans = 0xFF;
-  uint8_t error = 0xEE;
-  uint8_t match = 0;
-  uint8_t mode = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  //HAL_UART_Transmit_IT(&huart1, &ans,1);
-	  //HAL_UART_Transmit_IT(&huart2, &ans,1);
-	  HAL_Delay(1000);
-	              if(MODE_1==1){
-			  		  SET_LED_MODE1;
-			  		  SET_LED_LEFT;
-			  	  }else{
-			  		  RESET_LED_MODE1;
-			  		  RESET_LED_LEFT;
-			  	  }
-			  	  if(MODE_2==1){
-			  		  SET_LED_MODE2;
-			  		  SET_LED_RIGHT;
-			  	  }else{
-			  		  RESET_LED_MODE2;
-			  		  RESET_LED_RIGHT;
-			  	  }
-			  	  if((HALL_1==GPIO_PIN_RESET)||(HALL_2==GPIO_PIN_RESET)||(HALL_3==GPIO_PIN_RESET)){
-			  		 RESET_LED_MODE1;
-			         RESET_LED_MODE2;
+	  if(MODE_1==1){
+	                SET_LED_MODE1;
+	                SET_LED_LEFT;
+	              }else{
+	                RESET_LED_MODE1;
+	                RESET_LED_LEFT;
+	              }
+	              if(MODE_2==1){
+	                SET_LED_MODE2;
+	                SET_LED_RIGHT;
+	              }else{
+	                RESET_LED_MODE2;
+	                RESET_LED_RIGHT;
+	              }
+	              if((HALL_1==GPIO_PIN_RESET)||(HALL_2==GPIO_PIN_RESET)||(HALL_3==GPIO_PIN_RESET)){
+	               RESET_LED_MODE1;
+	                 RESET_LED_MODE2;
 
-			  	  }else{
-			  		  SET_LED_MODE1;
-			  		  SET_LED_MODE2;
-			  	  }
-			  	//if((MODE_1==GPIO_PIN_RESET)&&(HALL_1==GPIO_PIN_SET)){
-			  	//		  		  mode=1;
-			  	//		  	  }
-			  	 // if(mode==1 ){
-			  		  if(HAL_UART_Receive_IT (&huart1, &receivedData, 1) != HAL_BUSY ){
-			  			//HAL_UART_Transmit_IT(&huart1, &ans,1);
-			  		  		  match=0;
+	              }else{
+	                SET_LED_MODE1;
+	                SET_LED_MODE2;
+	              }
 
-			  		  			   if(receivedData==0x01){
-			  		  				   match=1;
-			  		  				   HAL_UART_Transmit(&huart1,&ans,1,HAL_MAX_DELAY);
-			  		  			   }
 
-			  		  		  // if(match!=1)HAL_UART_Transmit_IT(&huart1, &error, 1);
-			  		  	   //}
+
+	              //UART one by one__________________________________________________
+	            HAL_UART_Receive_IT(&huart1, &receivedData, 1);
 
 			  	  }
     /* USER CODE END WHILE */
@@ -169,7 +175,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-}
+
 
 /**
   * @brief System Clock Configuration
