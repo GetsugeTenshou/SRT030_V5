@@ -95,6 +95,25 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
       HAL_UART_Transmit_IT(&huart1, &error, 1);
     }
   }
+  /*-----------------------------------------*/
+  if(huart==&huart2)
+   {
+     for (int i = 0; i < sizeof(expectedData); i++)
+          {
+            if (receivedData == expectedData[i])
+            {
+              match = 1;
+              break;
+            }
+          }
+
+   if(match==1){
+       HAL_UART_Transmit_IT(&huart2, &fine, 1);
+     }
+     else{
+       HAL_UART_Transmit_IT(&huart2, &error, 1);
+     }
+   }
 }
 /* USER CODE END PFP */
 
@@ -168,7 +187,7 @@ int main(void)
 
 	              //UART one by one__________________________________________________
 	            HAL_UART_Receive_IT(&huart1, &receivedData, 1);
-
+	            HAL_UART_Receive_IT(&huart2, &receivedData, 1);
 			  	  }
     /* USER CODE END WHILE */
 
