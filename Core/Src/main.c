@@ -62,12 +62,13 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t expectedData[] = {0x01, 0x02, 0x03, 0x04, 0x05 ,0x06 ,0x07 ,0x08 ,0x09 ,0x0A ,0x0B ,0x0C ,0x0D ,0x0E,0x0F};
+  uint8_t expectedData[] = {0x01, 0x02, 0x03, 0x04, 0x05 ,0x06 ,0x07 ,0x08 ,0x09 ,0x0A ,0x0B ,0x0C ,0x0D ,0x0E,0x0F};
   uint8_t receivedData;
   uint8_t fine = 0xFF;
   uint8_t error = 0xEE;
   uint8_t match = 0;
-  uint8_t mode = 0;
+  uint8_t TXdata = 0x01;
+  uint8_t data_ready = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,7 +77,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef * huart){
   if(huart==&huart1)
   {
     for (int i = 0; i < sizeof(expectedData); i++)
@@ -98,6 +99,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   /*-----------------------------------------*/
   if(huart==&huart2)
    {
+	  if(/*кнопка нажата чи ні */){
+		  for (int i = 0; i < sizeof(expectedData); i++){
+		  				if(TXdata==expectedData[i]){
+		  					HAL_UART_Transmit_IT(&huart2, &TXdata, 1);
+		  				}
+		  				TXdata++;
+		  			}
+
+	  }
      for (int i = 0; i < sizeof(expectedData); i++)
           {
             if (receivedData == expectedData[i])
@@ -115,6 +125,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
      }
    }
 }
+
+//-----------------------------------------------------
+
+	/*void HAL_UART_RxCpltCallback(UART_HandleTypeDef * huartForBothUART){//в одному кол беке все реалізувати через іф + кнопку
+		if(huartForBothUART==&huart2){
+			for (int i = 0; i < sizeof(expectedData); i++){
+				if(TXdata==expectedData[i]){
+					HAL_UART_Transmit_IT(&huart2, &TXdata, 1);
+				}
+				TXdata++;
+			}
+		}
+	}*/
+
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -188,6 +214,13 @@ int main(void)
 	              //UART one by one__________________________________________________
 	            HAL_UART_Receive_IT(&huart1, &receivedData, 1);
 	            HAL_UART_Receive_IT(&huart2, &receivedData, 1);
+
+	            //UART by UART__________________________________________________
+	            if(data_ready){
+	            	HAL_UART_Transmit_IT(&huart1, &TXdata, 1);
+	            }
+	            HAL_UART_Receive_IT(&huart2, &receivedData, 1);
+
 			  	  }
     /* USER CODE END WHILE */
 
